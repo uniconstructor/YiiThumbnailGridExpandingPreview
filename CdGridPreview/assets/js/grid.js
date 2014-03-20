@@ -195,7 +195,15 @@ var Grid = (function() {
 		settings = {
 			minHeight : 500,
 			speed : 350,
-			easing : 'ease'
+			easing : 'ease',
+			 // if true - hide large image, display description with 100% width instread  
+	        descriptionOnly : false,
+	        
+	        loadingClass : 'og-loading',
+	        detailsClass : 'og-details',
+	        fullimgClass : 'og-fullimg',
+	        headerClass  : 'og-details-header',
+	        textClass    : 'og-details-text',
 		};
 
 	function init( config ) {
@@ -343,16 +351,35 @@ var Grid = (function() {
 
 	Preview.prototype = {
 		create : function() {
+		    //console.log(this.$item.children( 'a' ).data('largesrc'));
+		    //console.log(settings);
 			// create Preview structure:
-			this.$title = $( '<h3></h3>' );
-			this.$description = $( '<p></p>' );
+			this.$title = $( '<h3></h3>' ).addClass(settings.headerClass).append('<hr>');
+			this.$description = $( '<p></p>' ).addClass(settings.textClass);
 			this.$href = $( '' );
-			this.$details = $( '<div class="og-details"></div>' ).append( this.$title, this.$description, this.$href );
-			this.$loading = $( '<div class="og-loading"></div>' );
-			this.$fullimage = $( '<div class="og-fullimg"></div>' ).append( this.$loading );
+			this.$loading = $( '<div class="og-loading"></div>' ).addClass(settings.loadingClass);
+			if ( settings.descriptionOnly == true )
+		    {// hide image, 100% description width
+			    this.$details = $( '<div></div>' ).
+			        addClass(settings.detailsClass).
+			        addClass("og-fulldetails").
+			        append( this.$title, this.$description);
+	            this.$fullimage = $( '<div class="og-fullimg"></div>' ).addClass('hide');
+		    }else
+	        {// display description and image
+		        this.$details = $( '<div></div>' ).
+		            addClass(settings.detailsClass).
+		            append( this.$title, this.$description);
+	            this.$fullimage = $( '<div></div>' ).
+	                addClass(settings.fullimgClass).
+	                append( this.$loading );
+	        }
+			
 			this.$closePreview = $( '<span class="og-close"></span>' );
-			this.$previewInner = $( '<div class="og-expander-inner"></div>' ).append( this.$closePreview, this.$fullimage, this.$details );
-			this.$previewEl = $( '<div class="og-expander"></div>' ).append( this.$previewInner );
+			this.$previewInner = $( '<div class="og-expander-inner"></div>' ).
+			    append( this.$closePreview, this.$fullimage, this.$details );
+			this.$previewEl = $( '<div class="og-expander ec-gradient-dark-radial ec-internal-wrapper ec-body"></div>' ).
+			    append( this.$previewInner );
 			// append preview element to the item
 			this.$item.append( this.getEl() );
 			// set the transitions for the preview and the item

@@ -159,6 +159,17 @@ class CdGridItemBehavior extends CActiveRecordBehavior
     }
     
     /**
+     * 
+     * @return array
+     */
+    public function getGridListItemOptions()
+    {
+        return array(
+            'class' => 'og-grid-item',
+        );
+    }
+    
+    /**
      * Get unique id for grid element
      * 
      * @param string $type - element type (for example 'preview' or 'content')

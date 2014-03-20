@@ -4,7 +4,9 @@
  * Thumbnail Grid with Expanding Preview
  * @see http://tympanus.net/codrops/2013/03/19/thumbnail-grid-with-expanding-preview/
  * 
- * @todo is default.css required for this plugin?
+ * @todo separate "system styles" (elemets alignment) and "content styles" 
+ *      (header and text size, background color, etc.)
+ *       Put them into 2 different files. 
  */
 class CdGridPreview extends CWidget
 {
@@ -36,14 +38,28 @@ class CdGridPreview extends CWidget
      */
     public $dataProvider;
     /**
-     * @var array - the HTML options for the view container tag
+     * @var array - HTML options for view container tag
      */
     public $htmlOptions = array();
-    
+    /**
+     * @var array - HTML options for preview image
+     */
+    public $previewHtmlOptions = array();
+    /**
+     * @var string - if true, hide large image, display description with 100% width instread
+     */
+    public $descriptionOnly  = false;
     /**
      * @var array - JS plugin options
      */
-    protected $options = array();
+    public $options          = array();
+    /**
+     * @var bool - include modernizr library?
+     *             If you already use this library in your application then you don't need to register it twice
+     * @see http://modernizr.com official site for more info
+     */
+    public $includeModernizr = true;
+    
     /**
      * @var string
      */
@@ -55,15 +71,19 @@ class CdGridPreview extends CWidget
     public function init()
     {
         $this->setupOptions();
-        // publishing original plugin assets
+        
+        // register widget styles and scripts
         $this->assetUrl = Yii::app()->assetManager->publish(Yii::getPathOfAlias($this->widgetLocation.'.assets'));
-        
-        // registring custom widget libraries
+        // native component styles: keep in mind that you may need to override some of them
         Yii::app()->clientScript->registerCssFile($this->assetUrl.'/css/component.css');
-        Yii::app()->clientScript->registerScriptFile($this->assetUrl.'/js/modernizr.custom.js', CClientScript::POS_HEAD);
-        Yii::app()->clientScript->registerScriptFile($this->assetUrl.'/js/grid.js', CClientScript::POS_END);
         
-        // initilazing a grid
+        if ( $this->includeModernizr )
+        {// include modernizr in head section to avoid "undefined function" JS error
+            Yii::app()->clientScript->registerScriptFile($this->assetUrl.'/js/modernizr.custom.js', CClientScript::POS_HEAD);
+        }
+        // "grid.js" is main widget library. It can be included in the bottom to speed up page load 
+        Yii::app()->clientScript->registerScriptFile($this->assetUrl.'/js/grid.js', CClientScript::POS_END);
+        // finally, add grid init script. It runs only when page is ready and must be included after "grid.js"
         $js = $this->createGridInitJs();
         Yii::app()->clientScript->registerScript($this->getId().'_init', $js, CClientScript::POS_READY);
         
@@ -93,7 +113,7 @@ class CdGridPreview extends CWidget
     protected function setupOptions()
     {
         // Yii widget options
-        if ( ! ($this->dataProvider instanceof CActiveDataProvider) )
+        if ( ! ($this->dataProvider instanceof CDataProvider) )
         {
             throw new CException('Grid data provider not set');
         }
@@ -119,6 +139,7 @@ class CdGridPreview extends CWidget
         $this->listViewOptions = CMap::mergeArray($listViewDefaults, $this->listViewOptions);
         
         // JS plugin options
+        $this->options['descriptionOnly'] = $this->descriptionOnly;
         if ( $this->selector )
         {// @todo raize an error if selector is not set
             $this->options['selector'] = $this->selector;
